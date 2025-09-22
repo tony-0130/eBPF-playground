@@ -1,7 +1,22 @@
-# EBPF TEST
-This project is my personal study record of the eBPF program
+# eBPF Playground
 
-## 1. Environment preparement
+This project is my personal playground for learning and experimenting with eBPF (Extended Berkeley Packet Filter) programming. Currently focused on understanding the basics and getting familiar with the eBPF ecosystem.
+
+## Current Status
+🎯 **Phase 1: Learning Fundamentals** (In Progress)
+- Environment setup and toolchain configuration
+- Basic eBPF program compilation and loading
+- Understanding BPF maps and program lifecycle
+
+## Future Roadmap
+- [ ] Advanced eBPF program types (networking, tracing, security)
+- [ ] Performance monitoring and profiling tools
+- [ ] Custom eBPF applications and use cases
+- [ ] Integration with container orchestration platforms
+
+## Environment Setup
+
+> **Note**: This setup is specific to cross-compilation for ARM64 targets using NXP's IMX95 toolchain. Adapt paths and toolchain names for your specific hardware platform.
 
 ## Host Machine
 
@@ -29,7 +44,7 @@ $ make headers_install ARCH=arm64 INSTALL_HDR_PATH=~/kernel-headers
 
 ```shell
 sudo apt-get update
-sudo apt-get intall -y \
+sudo apt-get install -y \
     clang \
     llvm \
     libbpf-dev \
@@ -38,7 +53,7 @@ sudo apt-get intall -y \
 ## Target Machine
 
 ### Kernel config
-Can using the command `zgrep CONFIG_BPF /proc/config.gz` to check we have enable these neccessary configurations.
+Use the command `zgrep CONFIG_BPF /proc/config.gz` to verify these necessary configurations are enabled:
 
 ```conf
 CONFIG_BPF=y
@@ -53,7 +68,10 @@ CONFIG_BPF_EVENTS=y
 $ dpkg -i libbpf-staticdev_1.5.0-r0_arm64.deb
 ```
 
-## How to build eBPF program (ex: hello.bpf.o)
+## Basic eBPF Workflow
+
+### Building eBPF Programs
+Example: Compiling `hello.bpf.c` to `hello.bpf.o`
 ```shell
 make
 
@@ -68,13 +86,13 @@ Below command will
 - Load program to the kernel memory
 - Verify through the BPF validator
 - Create BPF Maps
-- Pin the program toe the file system (/sys/fs/bpf/hello)
+- Pin the program to the file system (/sys/fs/bpf/hello)
 - Allocate program ID
 ```shell
 $ sudo bpftool prog load hello.bpf.o /sys/fs/bpf/hello
 ```
 
-### Check registerd programs
+### Check registered programs
 ```shell
 $ sudo bpftool prog list | grep hello
 ```
@@ -86,11 +104,54 @@ $ sudo bpftool map list
 
 ## eBPF program Activation
 
-### Active 
+### Activation 
 Below command will
 - attach the program to cgroup hook
-- active program (start listening)
+- activate program (start listening)
 - Set the trigger condition (bind4 event)
 ```shell
 $ sudo bpftool cgroup attach /sys/fs/cgroup/ bind4 pinned /sys/fs/bpf/hello
 ```
+
+## Test with bind4 syscall
+
+### Run python to call bind
+```python
+python3 -c "
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('127.0.0.1', 8888))
+s.listen(1)
+print('Server listening on port 8888')
+input('Press Enter to exit...')
+s.close()
+"
+```
+
+### Dump Maps to check call
+```shell
+$ sudo bpftool map dump name counter_map
+```
+```shell
+root@imx95aom5521a2:~# sudo bpftool map dump name counter_map
+[
+    {
+        "key": 0,
+        "value": 2
+    }
+]
+
+```
+
+---
+
+## Next Steps
+- [ ] Explore different eBPF program types (XDP, TC, kprobes, uprobes)
+- [ ] Learn about BPF maps usage patterns
+- [ ] Implement custom tracing applications
+- [ ] Study eBPF security implications and best practices
+
+## Resources
+- [eBPF Official Documentation](https://ebpf.io/)
+- [Linux Kernel BPF Documentation](https://docs.kernel.org/bpf/)
+- [BPF Compiler Collection (BCC)](https://github.com/iovisor/bcc)
