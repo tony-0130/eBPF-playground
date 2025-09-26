@@ -5,7 +5,8 @@ Monitors process creation events using the `sched_process_fork` tracepoint. Capt
 
 ## Files
 - `process_monitor.bpf.c` - eBPF program that tracks process fork events
-- `Makefile` - Build configuration for compiling the eBPF program
+- `process_monitor.c` - Userspace program to read ring buffer events
+- `Makefile` - Build configuration for both kernel and userspace programs
 
 ## Prerequisites
 
@@ -62,14 +63,35 @@ echo "testing process creation"
 sudo bpftool map dump name process_count
 ```
 
-6. View ring buffer events (requires userspace program)
+6. Run the userspace program to view ring buffer events
 ```shell
-# Ring buffer events need a userspace reader - to be implemented
+sudo ./process_monitor
+```
+
+7. In another terminal, trigger process creation
+```shell
+ls /tmp
+ps aux | head
+echo "testing process creation"
 ```
 
 ## Expected output
-- **process_count map**: Shows total number of processes created
-- **events ring buffer**: Contains detailed process information (PID, PPID, command name)
+
+**process_count map:**
+```bash
+$ sudo bpftool map dump name process_count
+[{"key": 0, "value": 3}]
+```
+
+**Ring buffer events (from userspace program):**
+```
+Monitoring process creation events... Press Ctrl-C to exit
+PID      PPID     COMM
+-------- -------- ----------------
+12345    8888     ls
+12346    8888     ps
+12347    8888     head
+```
 
 ## How it works
 - Uses `SEC("tracepoint/sched/sched_process_fork")` to hook into process creation
@@ -78,7 +100,7 @@ sudo bpftool map dump name process_count
 - Captures process metadata using `bpf_get_current_pid_tgid()` and `bpf_get_current_comm()`
 
 ## Status
-✅ **Implemented** - eBPF program ready, userspace reader needed for full functionality
+✅ **Complete** - Full implementation with both kernel and userspace components
 
 ## Troubleshooting
 
