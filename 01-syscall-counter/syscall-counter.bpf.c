@@ -10,7 +10,7 @@ struct {
 } counter_map SEC(".maps");
 
 SEC("cgroup/bind4")
-int hello_bind(void *ctx)
+int syscall_counter(void *ctx)
 {
     int key = 0;
     long *count = bpf_map_lookup_elem(&counter_map, &key);
