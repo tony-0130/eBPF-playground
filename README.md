@@ -2,11 +2,39 @@
 
 This project is my personal playground for learning and experimenting with eBPF (Extended Berkeley Packet Filter) programming. Currently focused on understanding the basics and getting familiar with the eBPF ecosystem.
 
+## Exercises
+
+This repository contains a series of eBPF learning exercises, each in its own folder:
+
+- **01-syscall-counter/** - Count bind4 syscall invocations using cgroup hooks
+- **02-process-monitor/** - Track process creation and lifecycle (planned)
+
+Each exercise folder contains:
+- eBPF program source code
+- Makefile for building
+- Exercise-specific README (e.g., `syscall-counter-README.md`) with detailed instructions and notes
+
+## eBPF Concepts Covered
+
+### Program Types
+- **cgroup/bind4** - Attach to IPv4 bind operations in cgroups
+- **tracepoints** - Hook into kernel tracepoint events (various exercises)
+- **kprobes** - Dynamic kernel function tracing (future exercises)
+
+### BPF Maps
+- **BPF_MAP_TYPE_ARRAY** - Simple array-based storage for counters and data
+- Map operations: lookup, update, and userspace access patterns
+
+### Attachment Methods
+- **bpftool** - Manual program loading and attachment
+- **cgroup attachment** - Attaching programs to cgroup hooks for process monitoring
+
 ## Current Status
 🎯 **Phase 1: Learning Fundamentals** (In Progress)
-- Environment setup and toolchain configuration
-- Basic eBPF program compilation and loading
-- Understanding BPF maps and program lifecycle
+- ✅ Environment setup and toolchain configuration
+- ✅ Basic eBPF program compilation and loading
+- ✅ Understanding BPF maps and program lifecycle
+- ✅ Working syscall counter with cgroup/bind4 hook
 
 ## Future Roadmap
 - [ ] Advanced eBPF program types (networking, tracing, security)
@@ -47,7 +75,7 @@ sudo apt-get update
 sudo apt-get install -y \
     clang \
     llvm \
-    libbpf-dev \
+    libbpf-dev
 ```
 
 ## Target Machine
@@ -71,77 +99,19 @@ $ dpkg -i libbpf-staticdev_1.5.0-r0_arm64.deb
 ## Basic eBPF Workflow
 
 ### Building eBPF Programs
-Example: Compiling `hello.bpf.c` to `hello.bpf.o`
 ```shell
-make
-
-make clean
+make          # Build the eBPF program
+make clean    # Clean build artifacts
 ```
 
-## eBPF program Registration & Verification
+### General eBPF Operations
+Common `bpftool` operations for managing eBPF programs:
+- Load and verify programs in kernel
+- Attach programs to hooks/events
+- Monitor program execution and maps
+- Debug with detailed output (`-d` or `-dd` flags)
 
-### Registration & Verification
-if need detail info, can use `-d` or `-dd` option
-Below command will
-- Load program to the kernel memory
-- Verify through the BPF validator
-- Create BPF Maps
-- Pin the program to the file system (/sys/fs/bpf/hello)
-- Allocate program ID
-```shell
-$ sudo bpftool prog load hello.bpf.o /sys/fs/bpf/hello
-```
-
-### Check registered programs
-```shell
-$ sudo bpftool prog list | grep hello
-```
-
-### Check eBPF Maps
-```shell
-$ sudo bpftool map list
-```
-
-## eBPF program Activation
-
-### Activation 
-Below command will
-- attach the program to cgroup hook
-- activate program (start listening)
-- Set the trigger condition (bind4 event)
-```shell
-$ sudo bpftool cgroup attach /sys/fs/cgroup/ bind4 pinned /sys/fs/bpf/hello
-```
-
-## Test with bind4 syscall
-
-### Run python to call bind
-```python
-python3 -c "
-import socket
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('127.0.0.1', 8888))
-s.listen(1)
-print('Server listening on port 8888')
-input('Press Enter to exit...')
-s.close()
-"
-```
-
-### Dump Maps to check call
-```shell
-$ sudo bpftool map dump name counter_map
-```
-```shell
-root@imx95aom5521a2:~# sudo bpftool map dump name counter_map
-[
-    {
-        "key": 0,
-        "value": 2
-    }
-]
-
-```
+> **Note**: Each exercise folder contains specific commands and examples for that particular eBPF program.
 
 ---
 
@@ -150,6 +120,8 @@ root@imx95aom5521a2:~# sudo bpftool map dump name counter_map
 - [ ] Learn about BPF maps usage patterns
 - [ ] Implement custom tracing applications
 - [ ] Study eBPF security implications and best practices
+- [ ] Add userspace programs for reading eBPF maps
+- [ ] Implement more complex syscall monitoring
 
 ## Resources
 - [eBPF Official Documentation](https://ebpf.io/)
